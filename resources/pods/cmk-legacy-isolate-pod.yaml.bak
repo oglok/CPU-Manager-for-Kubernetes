@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Intel Corporation
+# Copyright (c) 2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,80 +13,82 @@
 # limitations under the License.
 #
 
-# NOTE: To be used with k8s >= 1.8.1, < 1.9.0 (or with k8s >= 1.9.0 if webhook is not used).
+# NOTE: To be used with k8s <= 1.7.x.
 
 apiVersion: v1
 kind: Pod
 metadata:
   labels:
     app: cmk-isolate-pod
+# Needed for k8s < 1.7
+#  annotations:
+#    "scheduler.alpha.kubernetes.io/tolerations": '[{"key":"cmk", "value":"true"}]'
   name: cmk-isolate-pod
   namespace: intel-cmk
 spec:
   serviceAccountName: cmk-serviceaccount
-  tolerations:
-  - operator: "Exists"
-  restartPolicy: Never
+# Needed for k8s >= 1.7
+#  tolerations:
+#  - operator: "Exists"
   containers:
-  - name: cmk-isolate-exclusive
-    image: quay.io/oglok/ocp4-cmk:latest
+  - args:
+    - "/opt/bin/cmk isolate --conf-dir=/etc/cmk --pool=exclusive echo -- Hello World Exclusive!!!"
     command:
     - "/bin/bash"
     - "-c"
-    args:
-    - "/opt/bin/cmk isolate --conf-dir=/etc/cmk --pool=exclusive echo -- Hello World Exclusive!!!"
+    env:
+    - name: CMK_PROC_FS
+      value: "/host/proc"
+    image:quay.io/oglok/ocp4-cmk:latest
+    name: cmk-isolate-exclusive
     resources:
       requests:
-        cmk.intel.com/exclusive-cores: '1'
-      limits:
-        cmk.intel.com/exclusive-cores: '1'
-    env:
-    - name: CMK_PROC_FS
-      value: "/host/proc"
+        pod.alpha.kubernetes.io/opaque-int-resource-cmk: '1'
     volumeMounts:
     - mountPath: "/host/proc"
-      name: cmk-host-proc
+      name: host-proc
       readOnly: true
     - mountPath: "/opt/bin"
       name: cmk-install-dir
     - mountPath: "/etc/cmk"
       name: cmk-conf-dir
-  - name: cmk-isolate-shared
-    image: quay.io/oglok/ocp4-cmk:latest
-    command:
-    - "/bin/bash"
-    - "-c"
-    args:
+  - args:
     - "/opt/bin/cmk isolate --conf-dir=/etc/cmk --pool=shared echo -- Hello World Shared!!!"
-    env:
-    - name: CMK_PROC_FS
-      value: "/host/proc"
-    volumeMounts:
-    - mountPath: "/host/proc"
-      name: cmk-host-proc
-      readOnly: true
-    - mountPath: "/opt/bin"
-      name: cmk-install-dir
-    - mountPath: "/etc/cmk"
-      name: cmk-conf-dir
-  - name: cmk-isolate-infra
-    image: quay.io/oglok/ocp4-cmk:latest
     command:
     - "/bin/bash"
     - "-c"
-    args:
-    - "/opt/bin/cmk isolate --conf-dir=/etc/cmk --pool=infra echo -- Hello World Infra!!!"
     env:
     - name: CMK_PROC_FS
       value: "/host/proc"
+    image:quay.io/oglok/ocp4-cmk:latest
+    name: cmk-isolate-shared
     volumeMounts:
     - mountPath: "/host/proc"
-      name: cmk-host-proc
+      name: host-proc
       readOnly: true
     - mountPath: "/opt/bin"
       name: cmk-install-dir
     - mountPath: "/etc/cmk"
       name: cmk-conf-dir
+  - args:
+    - "/opt/bin/cmk isolate --conf-dir=/etc/cmk --pool=infra echo -- Hello World Infra!!!"
+    command:
+    - "/bin/bash"
+    - "-c"
+    env:
+    - name: CMK_PROC_FS
+      value: "/host/proc"
+    image:quay.io/oglok/ocp4-cmk:latest
+    name: cmk-isolate-infra
+    volumeMounts:
+    - mountPath: "/host/proc"
+      name: host-proc
+      readOnly: true
+    - mountPath: "/opt/bin"
+      name: cmk-install-dir
+    - mountPath: "/etc/cmk"
+      name: cmk-conf-dir
+  restartPolicy: Never
   volumes:
   - hostPath:
       # Change this to modify the CMK installation dir in the host file system.
@@ -94,7 +96,7 @@ spec:
     name: cmk-install-dir
   - hostPath:
       path: "/proc"
-    name: cmk-host-proc
+    name: host-proc
   - hostPath:
       # Change this to modify the CMK config dir in the host file system.
       path: "/etc/cmk"

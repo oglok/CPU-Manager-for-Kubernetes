@@ -22,7 +22,8 @@ spec:
   serviceAccountName: cmk-serviceaccount
   containers:
   - args:
-    - "/cmk/cmk.py discover --conf-dir=/etc/cmk"
+    #- "/cmk/cmk.py discover --conf-dir=/etc/cmk"
+    - "sleep 60000"
     command:
     - "/bin/bash"
     - "-c"
@@ -31,7 +32,7 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: spec.nodeName
-    image: cmk:v1.3.1
+    image: quay.io/oglok/ocp4-cmk:latest
     name: cmk-discover-pod
     volumeMounts:
     - mountPath: "/etc/cmk"

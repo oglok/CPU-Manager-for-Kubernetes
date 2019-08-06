@@ -16,46 +16,46 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   labels:
-    app: cmk-uninstall-all-nodes
+    app: cmk-node-report-ds-all
 # Needed for k8s < 1.7
 #  annotations:
 #    "scheduler.alpha.kubernetes.io/tolerations": '[{"key":"cmk", "value":"true"}]'
-  name: cmk-uninstall-all-nodes
+  name: cmk-node-report-ds-all
 spec:
   template:
     metadata:
       labels:
-        app: cmk-uninstall-all-nodes
+        app: cmk-node-report-ds-all
     spec:
       serviceAccountName: cmk-serviceaccount
 # Needed for k8s >= 1.7
 #      tolerations:
 #      - operator: "Exists"
-      nodeSelector:
-        "cmk.intel.com/cmk-node": "true"
       containers:
       - args:
-        - "/cmk/cmk.py uninstall"
+        - "/cmk/cmk.py isolate --pool=infra /cmk/cmk.py -- node-report --interval=$CMK_NODE_REPORT_SLEEP_TIME --publish"
         command:
         - "/bin/bash"
         - "-c"
         env:
+        - name: CMK_NODE_REPORT_SLEEP_TIME
+          # Change this to modify the sleep interval between consecutive
+          # cmk node report runs. The value is specified in seconds.
+          value: '60'
         - name: CMK_PROC_FS
           value: "/host/proc"
         - name: NODE_NAME
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-    image: quay.io/oglok/ocp4-cmk:latest
-        name: cmk-uninstall-all-nodes
+    image:quay.io/oglok/ocp4-cmk:latest
+        name: cmk-nodereport
         volumeMounts:
-        - mountPath: "/etc/cmk"
-          name: cmk-conf-dir
         - mountPath: "/host/proc"
           name: host-proc
           readOnly: true
-        - mountPath: "/opt/bin"
-          name: cmk-install-dir
+        - mountPath: "/etc/cmk"
+          name: cmk-conf-dir
       volumes:
       - hostPath:
           path: "/proc"
@@ -64,7 +64,3 @@ spec:
           # Change this to modify the CMK config dir in the host file system.
           path: "/etc/cmk"
         name: cmk-conf-dir
-      - hostPath:
-          # Change this to modify the CMK installation dir in the host file system.
-          path: "/opt/bin"
-        name: cmk-install-dir

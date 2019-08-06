@@ -21,7 +21,7 @@ metadata:
 #  annotations:
 #    "scheduler.alpha.kubernetes.io/tolerations": '[{"key":"cmk", "value":"true"}]'
   name: cmk-uninstall-pod
-  #namespace: user-supplied-namespace        
+  namespace: intel-cmk
 spec:
   serviceAccountName: cmk-serviceaccount
 # Needed for k8s >= 1.7
@@ -43,7 +43,7 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: spec.nodeName
-    image: cmk:v1.3.1
+    image: quay.io/oglok/ocp4-cmk:latest
     name: cmk-uninstall-pod
     volumeMounts:
     - mountPath: "/etc/cmk"

@@ -16,33 +16,24 @@ apiVersion: v1
 kind: Pod
 metadata:
   labels:
-    app: cmk-init-pod
-  name: cmk-init-pod
+    app: cmk-install-pod
+  name: cmk-install-pod
 spec:
   serviceAccountName: cmk-serviceaccount
   containers:
   - args:
-    - "/cmk/cmk.py init --conf-dir=/etc/cmk --num-exclusive-cores=$NUM_EXCLUSIVE_CORES --num-shared-cores=$NUM_SHARED_CORES"
+    - "/cmk/cmk.py install --install-dir=/opt/bin"
     command:
     - "/bin/bash"
     - "-c"
-    env:
-    - name: CMK_PROC_FS
-      value: '/proc'
-    - name: NUM_EXCLUSIVE_CORES
-      # Change this to modify the value passed to `--num-exclusive-cores` flag.
-      value: '4'
-    - name: NUM_SHARED_CORES
-      # Change this to modify the value passed to `--num-shared-cores` flag.
-      value: '1'
-    image: quay.io/oglok/ocp4-cmk:latest
-    name: cmk-init-pod
+    image:quay.io/oglok/ocp4-cmk:latest
+    name: cmk-install-pod
     volumeMounts:
-    - mountPath: "/etc/cmk"
-      name: cmk-conf-dir
+    - mountPath: "/opt/bin"
+      name: cmk-install-dir
   restartPolicy: Never
   volumes:
   - hostPath:
-      # Change this to modify the CMK config dir in the host file system.
-      path: "/etc/cmk"
-    name: cmk-conf-dir
+      # Change this to modify the CMK installation dir in the host file system.
+      path: "/opt/bin"
+    name: cmk-install-dir

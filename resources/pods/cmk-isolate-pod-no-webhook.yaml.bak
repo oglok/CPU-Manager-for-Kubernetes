@@ -29,7 +29,7 @@ spec:
   restartPolicy: Never
   containers:
   - name: cmk-isolate-exclusive
-    image: quay.io/oglok/ocp4-cmk:latest
+    image:quay.io/oglok/ocp4-cmk:latest
     command:
     - "/bin/bash"
     - "-c"
@@ -52,7 +52,7 @@ spec:
     - mountPath: "/etc/cmk"
       name: cmk-conf-dir
   - name: cmk-isolate-shared
-    image: quay.io/oglok/ocp4-cmk:latest
+    image:quay.io/oglok/ocp4-cmk:latest
     command:
     - "/bin/bash"
     - "-c"
@@ -70,7 +70,7 @@ spec:
     - mountPath: "/etc/cmk"
       name: cmk-conf-dir
   - name: cmk-isolate-infra
-    image: quay.io/oglok/ocp4-cmk:latest
+    image:quay.io/oglok/ocp4-cmk:latest
     command:
     - "/bin/bash"
     - "-c"

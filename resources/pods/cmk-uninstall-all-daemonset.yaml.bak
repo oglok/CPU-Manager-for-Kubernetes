@@ -46,7 +46,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-    image: quay.io/oglok/ocp4-cmk:latest
+    image:quay.io/oglok/ocp4-cmk:latest
         name: cmk-uninstall-all-nodes
         volumeMounts:
         - mountPath: "/etc/cmk"
